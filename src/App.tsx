@@ -12,7 +12,6 @@ const suggestions = [
 
 function Logo() {
   return <div className="logo-mark" aria-hidden="true">
-    <span className="logo-halo" />
     <div className="logo-core" />
     <span className="orbit orbit-a"><i /></span>
     <span className="orbit orbit-b"><i /></span>
@@ -122,7 +121,6 @@ export default function App() {
       <header><button className="menu-btn" onClick={() => setSidebar(true)}><Menu size={20} /></button><div className="header-title"><Bot size={19} /><span>Agente Nexo</span><em>LOCAL</em></div><div className="header-meta"><Zap size={14} /><span>{model}</span></div></header>
       <section className="chat">
         {messages.length === 0 ? <div className="welcome">
-          <div className="ambient-particles" aria-hidden="true"><i /><i /><i /><i /><i /><i /></div>
           <div className="hero-logo"><Logo /></div>
           <p className="eyebrow"><span /> INTELIGÊNCIA QUE AGE</p>
           <h1>Olá. Eu sou o <span>Nexo.</span></h1>
