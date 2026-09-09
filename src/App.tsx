@@ -23,7 +23,7 @@ export default function App() {
   const [status, setStatus] = useState('');
   const [liveTools, setLiveTools] = useState<ToolUse[]>([]);
   const [online, setOnline] = useState(false);
-  const [model, setModel] = useState('qwen3:1.7b');
+  const [model, setModel] = useState('qwen3:0.6b');
   const [sidebar, setSidebar] = useState(false);
   const endRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);

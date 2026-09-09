@@ -1,6 +1,6 @@
 # Nexo
 
-Um agente de IA local com interface completa, memória persistente e ferramentas reais. O Nexo usa o Ollama e o `qwen3:1.7b`, mantendo conversas e dados na própria máquina.
+Um agente de IA local com interface completa, memória persistente e ferramentas reais. O Nexo usa o Ollama e o `qwen3:0.6b`, mantendo conversas e dados na própria máquina.
 
 ## O que já faz
 
@@ -21,7 +21,7 @@ Um agente de IA local com interface completa, memória persistente e ferramentas
 
 ```powershell
 npm install
-ollama pull qwen3:1.7b
+ollama pull qwen3:0.6b
 npm run dev
 ```
 
