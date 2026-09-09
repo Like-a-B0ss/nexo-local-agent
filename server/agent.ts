@@ -23,7 +23,7 @@ export async function checkOllama() {
   return { online: true, model: MODEL, installed: data.models?.some((m) => m.name === MODEL || m.name.startsWith(`${MODEL}:`)) ?? false };
 }
 
-export async function* runAgent(history: AgentMessage[]): AsyncGenerator<AgentEvent> {
+export async function* runAgent(history: AgentMessage[], signal?: AbortSignal): AsyncGenerator<AgentEvent> {
   const messages: AgentMessage[] = [{ role: 'system', content: systemPrompt }, ...history];
   const usedTools: { name: string; label: string; result: string }[] = [];
 
@@ -33,7 +33,7 @@ export async function* runAgent(history: AgentMessage[]): AsyncGenerator<AgentEv
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ model: MODEL, messages, tools: toolDefinitions, stream: false, options: { temperature: 0.55, num_ctx: 16384 } }),
-      signal: AbortSignal.timeout(180_000),
+      signal: signal ? AbortSignal.any([signal, AbortSignal.timeout(180_000)]) : AbortSignal.timeout(180_000),
     });
     if (!response.ok) throw new Error(`O motor local respondeu ${response.status}`);
     const payload = await response.json() as { message: AgentMessage };

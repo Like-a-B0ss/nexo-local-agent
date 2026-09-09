@@ -27,6 +27,7 @@ export default function App() {
   const [sidebar, setSidebar] = useState(false);
   const endRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  const abortRef = useRef<AbortController | undefined>(undefined);
 
   const refreshSessions = async () => setSessions(await fetch('/api/sessions').then((r) => r.json()));
   const loadSession = async (id: string) => {
@@ -46,6 +47,13 @@ export default function App() {
       }).catch(() => { setOnline(false); newChat(); });
   }, []);
   useEffect(() => { endRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages, status, liveTools]);
+  useEffect(() => {
+    const shortcut = (event: KeyboardEvent) => {
+      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'k') { event.preventDefault(); newChat(); }
+    };
+    window.addEventListener('keydown', shortcut);
+    return () => window.removeEventListener('keydown', shortcut);
+  }, []);
 
   const removeSession = async (event: React.MouseEvent, id: string) => {
     event.stopPropagation();
@@ -59,11 +67,12 @@ export default function App() {
     const content = text.trim();
     if (!content || running || !activeId) return;
     setInput(''); setRunning(true); setStatus('Conectando ao motor local'); setLiveTools([]);
+    const controller = new AbortController(); abortRef.current = controller;
     const optimistic: Message = { id: crypto.randomUUID(), role: 'user', content, createdAt: new Date().toISOString() };
     const assistant: Message = { id: crypto.randomUUID(), role: 'assistant', content: '', createdAt: new Date().toISOString(), tools: [] };
     setMessages((current) => [...current, optimistic, assistant]);
     try {
-      const response = await fetch('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ sessionId: activeId, message: content }) });
+      const response = await fetch('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ sessionId: activeId, message: content }), signal: controller.signal });
       if (!response.ok || !response.body) throw new Error('Não foi possível iniciar o agente.');
       const reader = response.body.getReader(); const decoder = new TextDecoder(); let buffer = ''; let answer = '';
       while (true) {
@@ -83,8 +92,9 @@ export default function App() {
       }
       await refreshSessions();
     } catch (error) {
-      setMessages((current) => current.map((item) => item.id === assistant.id ? { ...item, content: `Não consegui concluir: ${error instanceof Error ? error.message : 'erro inesperado'}` } : item));
-    } finally { setRunning(false); setStatus(''); setLiveTools([]); }
+      const aborted = error instanceof DOMException && error.name === 'AbortError';
+      setMessages((current) => current.map((item) => item.id === assistant.id ? { ...item, content: item.content || (aborted ? 'Resposta interrompida.' : `Não consegui concluir: ${error instanceof Error ? error.message : 'erro inesperado'}`) } : item));
+    } finally { abortRef.current = undefined; setRunning(false); setStatus(''); setLiveTools([]); }
   };
 
   return <div className="app-shell">
@@ -122,7 +132,7 @@ export default function App() {
         {running && (status || liveTools.length > 0) && <div className="agent-progress"><div className="progress-line"><span className="spinner" />{status}</div>{liveTools.map((tool, index) => <ToolPill tool={tool} key={`${tool.name}-${index}`} />)}</div>}
         <div ref={endRef} /></div>}
       </section>
-      <div className="composer-wrap"><div className={`composer ${running ? 'busy' : ''}`}><textarea ref={inputRef} value={input} rows={1} placeholder="Peça algo ao Nexo..." onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); } }} /><button className="send" onClick={() => send()} disabled={!input.trim() && !running}>{running ? <CircleStop size={18} /> : <ArrowUp size={20} />}</button></div><p>Enter para enviar · Shift + Enter para nova linha · tudo processado localmente</p></div>
+      <div className="composer-wrap"><div className={`composer ${running ? 'busy' : ''}`}><textarea ref={inputRef} value={input} rows={1} placeholder="Peça algo ao Nexo..." onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); } }} /><button className="send" onClick={() => running ? abortRef.current?.abort() : send()} disabled={!input.trim() && !running} title={running ? 'Interromper' : 'Enviar'}>{running ? <CircleStop size={18} /> : <ArrowUp size={20} />}</button></div><p>Enter para enviar · Shift + Enter para nova linha · tudo processado localmente</p></div>
     </main>
   </div>;
 }

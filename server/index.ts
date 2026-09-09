@@ -51,6 +51,9 @@ app.post('/api/chat', async (req, res) => {
   res.setHeader('Cache-Control', 'no-cache, no-transform');
   res.setHeader('X-Accel-Buffering', 'no');
   res.flushHeaders();
+  const controller = new AbortController();
+  let completed = false;
+  res.on('close', () => { if (!completed) controller.abort(); });
   const send = (event: unknown) => res.write(`${JSON.stringify(event)}\n`);
 
   const userMessage: ChatMessage = { id: crypto.randomUUID(), role: 'user', content: message.trim(), createdAt: new Date().toISOString() };
@@ -66,7 +69,7 @@ app.post('/api/chat', async (req, res) => {
     const history: AgentMessage[] = (latest?.messages ?? []).slice(-24).map((item) => ({ role: item.role, content: item.content }));
     let finalContent = '';
     let tools: ChatMessage['tools'] = [];
-    for await (const event of runAgent(history)) {
+    for await (const event of runAgent(history, controller.signal)) {
       send(event);
       if (event.type === 'done') {
         finalContent = String(event.content);
@@ -79,8 +82,9 @@ app.post('/api/chat', async (req, res) => {
       if (target) { target.messages.push(assistantMessage); target.updatedAt = assistantMessage.createdAt; }
     });
   } catch (error) {
-    send({ type: 'error', message: error instanceof Error ? error.message : 'Falha no agente local' });
+    if (!controller.signal.aborted) send({ type: 'error', message: error instanceof Error ? error.message : 'Falha no agente local' });
   } finally {
+    completed = true;
     res.end();
   }
 });
