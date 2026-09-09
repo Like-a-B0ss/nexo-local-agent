@@ -3,7 +3,7 @@ import { runTool } from './tools.js';
 
 describe('agent tools', () => {
   it('evaluates arithmetic safely', async () => {
-    expect(JSON.parse(await runTool('calculate', { expression: '(1250 * 1.12) / 10' })).result).toBeCloseTo(140);
+    expect(JSON.parse(await runTool('calculate', { expression: '(1250 * 1.12) / 10' })).result).toBe(140);
   });
 
   it('rejects executable expressions', async () => {

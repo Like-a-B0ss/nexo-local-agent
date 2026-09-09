@@ -75,7 +75,9 @@ export async function runTool(name: string, args: Record<string, unknown>): Prom
     case 'calculate': {
       const expression = String(args.expression ?? '');
       if (!/^[0-9+\-*/().,%^\s]+$/.test(expression)) throw new Error('Expressão contém caracteres não permitidos.');
-      return JSON.stringify({ expression, result: evaluate(expression) });
+      const computed = evaluate(expression);
+      const result = typeof computed === 'number' ? Number(computed.toPrecision(15)) : computed;
+      return JSON.stringify({ expression, result });
     }
     case 'current_datetime':
       return JSON.stringify({ iso: new Date().toISOString(), local: new Intl.DateTimeFormat('pt-BR', { dateStyle: 'full', timeStyle: 'long' }).format(new Date()) });
