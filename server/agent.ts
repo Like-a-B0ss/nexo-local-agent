@@ -2,7 +2,7 @@ import type { AgentMessage } from './types.js';
 import { runTool, toolDefinitions, toolLabels } from './tools.js';
 
 const OLLAMA_URL = process.env.OLLAMA_URL ?? 'http://127.0.0.1:11434';
-export const MODEL = process.env.OLLAMA_MODEL ?? 'qwen3.5:4b';
+export const MODEL = process.env.OLLAMA_MODEL ?? 'qwen3:1.7b';
 
 const systemPrompt = `Você é Nexo, um agente pessoal local, inteligente e pragmático.
 Responda sempre no idioma do usuário. Seja direto, claro e útil, mas com personalidade.

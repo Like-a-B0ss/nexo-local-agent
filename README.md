@@ -1,6 +1,6 @@
 # Nexo
 
-Um agente de IA local com interface completa, memória persistente e ferramentas reais. O Nexo usa o Ollama e o `qwen3.5:4b`, mantendo conversas e dados na própria máquina.
+Um agente de IA local com interface completa, memória persistente e ferramentas reais. O Nexo usa o Ollama e o `qwen3:1.7b`, mantendo conversas e dados na própria máquina.
 
 ## O que já faz
 
@@ -21,7 +21,7 @@ Um agente de IA local com interface completa, memória persistente e ferramentas
 
 ```powershell
 npm install
-ollama pull qwen3.5:4b
+ollama pull qwen3:1.7b
 npm run dev
 ```
 
@@ -41,4 +41,3 @@ Copie `.env.example` para `.env` se quiser alterar `OLLAMA_URL`, `OLLAMA_MODEL` 
 ## Arquitetura
 
 O frontend React consome uma API Express. A API mantém o ciclo do agente, envia ao modelo as ferramentas disponíveis, executa localmente somente a função solicitada e devolve eventos incrementais à interface. Nenhum comando de shell ou acesso arbitrário a arquivos é exposto ao modelo.
-
